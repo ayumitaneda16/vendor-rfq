@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Vendor Quote Request</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#F5F2EC" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RFQ" />
+<link rel="apple-touch-icon" href="/icon-180.png" />
+<link rel="icon" href="/icon-180.png" />
+<style>
+  :root{
+    --paper:#F5F2EC; --panel:#FFFFFF; --ink:#1C1A17; --sub:#6E675C;
+    --line:#E2DCD0; --seal:#C8442E; --sealSoft:#F2D9D2; --ok:#3E7A5E; --field:#FBFAF7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    padding:28px 18px calc(60px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:860px;margin:0 auto;}
+  .head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px;}
+  .badge{width:30px;height:30px;border-radius:8px;background:var(--seal);color:#fff;
+    display:grid;place-items:center;font-weight:700;font-size:14px;transform:translateY(4px);flex-shrink:0;}
+  h1{font-size:26px;font-weight:700;margin:0;letter-spacing:-0.01em;}
+  .lead{font-size:13px;color:var(--sub);margin:0 0 22px;padding-left:42px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;}
+  .label{font-size:12px;font-weight:700;letter-spacing:0.04em;color:#9A9182;margin-bottom:6px;}
+  input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+    font-size:15px;color:var(--ink);background:#fff;outline:none;font-family:inherit;}
+  textarea{resize:vertical;line-height:1.6;}
+  .field{margin-bottom:14px;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .row .field{flex:1 1 220px;}
+  .qtyRow{display:flex;gap:8px;margin-bottom:7px;}
+  .rm{border:none;background:#EFE9DE;color:var(--sub);width:40px;border-radius:9px;cursor:pointer;font-size:18px;flex-shrink:0;}
+  .add{border:1px dashed var(--line);background:transparent;color:var(--seal);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600;}
+  .toggle{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;}
+  .toggle button{border:none;background:transparent;color:var(--sub);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:600;}
+  .toggle button.active{background:var(--ink);color:#fff;}
+  .toggleMini{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:2px;}
+  .toggleMini button{border:none;background:transparent;color:var(--sub);padding:5px 11px;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:600;}
+  .toggleMini button.active{background:var(--ink);color:#fff;}
+  .copy{border:none;background:var(--seal);color:#fff;padding:9px 18px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:700;}
+  .copy.ok{background:var(--ok);}
+  .swap{border:none;background:var(--sealSoft);color:var(--seal);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:700;}
+  .tbtn{margin-top:10px;border:none;background:var(--seal);color:#fff;padding:9px 20px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:700;}
+  .tbtn:disabled{background:var(--line);color:var(--sub);cursor:default;}
+  pre{background:var(--field);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0;
+    font-size:14.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;min-height:160px;font-family:inherit;}
+  pre.spec{font-family:'SF Mono','Menlo','Consolas',monospace;}
+  .divider{height:1px;background:var(--line);margin:0 0 22px;}
+  .out-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .tOutBox{flex:1 1 240px;position:relative;min-height:70px;border:1px solid var(--line);border-radius:9px;
+    padding:10px 12px;background:var(--field);font-size:14.5px;line-height:1.6;white-space:pre-wrap;color:var(--sub);}
+  .tCopy{position:absolute;top:8px;right:8px;border:none;background:var(--sealSoft);color:var(--seal);
+    padding:4px 9px;border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:700;}
+  .tCopy.ok{background:var(--ok);color:#fff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="badge">RFQ</div>
+    <h1>Vendor Quote Request</h1>
+  </div>
+  <p class="lead">項目を埋める → メール形式 / スペック形式を切替 → コピー。数量は行を足して入力。</p>
+
+  <!-- Quick translator -->
+  <div class="card" style="margin-bottom:22px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--seal);">Quick 翻訳</span>
+      <div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;">
+        <span id="tFrom">日本語</span>
+        <button class="swap" onclick="tSwap()" title="方向切替">⇄</button>
+        <span id="tTo">English</span>
+      </div>
+      <div class="toggleMini" id="toneToggle" style="margin-left:auto;">
+        <button class="active" data-tone="formal" onclick="setTone('formal')">丁寧</button>
+        <button data-tone="casual" onclick="setTone('casual')">カジュアル</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <textarea id="tIn" placeholder="日本語を入力… (⌘/Ctrl+Enter)" style="flex:1 1 240px;min-height:70px;"></textarea>
+      <div class="tOutBox" id="tOut">翻訳結果…</div>
+    </div>
+    <button class="tbtn" id="tBtn" onclick="translate()" disabled>English に翻訳</button>
+  </div>
+
+  <!-- cm / inch converter -->
+  <div class="card" style="margin-bottom:22px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--seal);">単位換算 cm ⇄ inch</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--sub);">1 inch = 2.54 cm</span>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div style="flex:1 1 160px;">
+        <div class="label">cm</div>
+        <input id="cmIn" type="number" inputmode="decimal" placeholder="10" oninput="fromCm()">
+      </div>
+      <div style="font-size:20px;color:var(--seal);padding-bottom:8px;">⇄</div>
+      <div style="flex:1 1 160px;">
+        <div class="label">inch</div>
+        <input id="inIn" type="number" inputmode="decimal" placeholder="3.94" oninput="fromInch()">
+      </div>
+      <button class="add" style="border-style:solid;" onclick="clearConv()">クリア</button>
+    </div>
+    <div id="convHint" style="font-size:12.5px;color:var(--sub);margin-top:10px;min-height:16px;"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Form -->
+  <div class="card">
+    <div class="field"><div class="label">Vendor 宛名</div><input id="vendor" placeholder="Cherry"></div>
+    <div class="field"><div class="label">Item 商品名・内容</div><input id="item" placeholder="3D sticker sheets"></div>
+    <div class="row">
+      <div class="field"><div class="label">Size サイズ</div><input id="size" placeholder='3.5&quot;W x 6&quot;H ish'></div>
+      <div class="field"><div class="label">Material 素材</div><input id="material" placeholder="3D sticker sheets"></div>
+    </div>
+    <div style="margin:4px 0 14px;">
+      <div class="label">QTY 数量（行を足せる／メールから貼って打ち込み）</div>
+      <div id="qtyRows"></div>
+      <button class="add" onclick="addQty()">＋ 数量を追加</button>
+    </div>
+    <div class="row">
+      <div class="field"><div class="label">Shipping 配送条件</div>
+        <select id="shipping">
+          <option>SEA DDP</option><option>AIR DDP</option><option>SEA</option>
+          <option>AIR</option><option>FOB</option><option>EXW</option>
+        </select>
+      </div>
+      <div class="field"><div class="label">Due 納期</div><input id="due" placeholder="OCT"></div>
+    </div>
+    <div class="field"><div class="label">Design デザイン</div><input id="design" value="full-color designs"></div>
+    <div class="field"><div class="label">Notes 注記</div><input id="notes" value="Photo is an image."></div>
+  </div>
+
+  <!-- Output -->
+  <div style="margin-top:20px;">
+    <div class="out-head">
+      <div class="toggle" id="viewToggle">
+        <button class="active" data-view="email" onclick="setView('email')">メール形式</button>
+        <button data-view="spec" onclick="setView('spec')">スペック形式</button>
+      </div>
+      <button class="copy" id="copyBtn" onclick="copyOut()">コピー</button>
+    </div>
+    <pre id="output"></pre>
+  </div>
+</div>
+
+<script>
+  var view = "email";
+  var qtys = [""];
+
+  function el(id){return document.getElementById(id);}
+  var fields = ["vendor","item","size","material","shipping","due","design","notes"];
+  fields.forEach(function(id){ el(id).addEventListener("input", render); });
+
+  // ── clipboard with fallback (works even when async clipboard API is blocked) ──
+  function copyText(txt){
+    if(navigator.clipboard && window.isSecureContext){
+      return navigator.clipboard.writeText(txt);
+    }
+    return new Promise(function(resolve,reject){
+      try{
+        var ta=document.createElement("textarea");
+        ta.value=txt; ta.style.position="fixed"; ta.style.opacity="0";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        var ok=document.execCommand("copy");
+        document.body.removeChild(ta);
+        ok?resolve():reject();
+      }catch(e){ reject(e); }
+    });
+  }
+
+  function renderQtyRows(){
+    var box = el("qtyRows");
+    box.innerHTML = "";
+    qtys.forEach(function(q,i){
+      var row = document.createElement("div");
+      row.className = "qtyRow";
+      var inp = document.createElement("input");
+      inp.value = q;
+      inp.placeholder = i===0 ? "18,000" : "36,000";
+      inp.addEventListener("input", function(){ qtys[i] = inp.value; render(); });
+      row.appendChild(inp);
+      if(qtys.length>1){
+        var rm = document.createElement("button");
+        rm.className="rm"; rm.textContent="×";
+        rm.onclick=function(){ qtys.splice(i,1); renderQtyRows(); render(); };
+        row.appendChild(rm);
+      }
+      box.appendChild(row);
+    });
+  }
+  function addQty(){ qtys.push(""); renderQtyRows(); render(); }
+
+  function cleanQtys(){ return qtys.map(function(q){return q.trim();}).filter(Boolean); }
+
+  function buildEmail(){
+    var f={}; fields.forEach(function(id){f[id]=el(id).value.trim();});
+    var q=cleanQtys(); var L=[];
+    L.push((f.vendor||"[Vendor]")+",");
+    L.push("");
+    L.push("Please provide your price including "+(f.shipping||"SEA DDP")+".");
+    L.push("");
+    if(f.item) L.push("Item: "+f.item);
+    if(f.size) L.push("Size: "+f.size);
+    if(q.length) L.push("QTY: "+q.join(" and "));
+    if(f.material) L.push("Material: "+f.material);
+    L.push("");
+    if(f.due){ L.push("DUE: "+f.due.toUpperCase()); L.push(""); }
+    var notes=[];
+    if(f.notes) notes.push(f.notes);
+    if(f.design) notes.push("We will use "+f.design+".");
+    if(notes.length) L.push(notes.join("\n"));
+    L.push(""); L.push("Thank you!");
+    return L.join("\n").replace(/\n{3,}/g,"\n\n");
+  }
+  function buildSpec(){
+    var f={}; fields.forEach(function(id){f[id]=el(id).value.trim();});
+    var q=cleanQtys(); var L=[];
+    if(f.item) L.push("Item     : "+f.item);
+    if(f.size) L.push("Size     : "+f.size);
+    if(q.length) L.push("QTY      : "+q.join(" / "));
+    if(f.material) L.push("Material : "+f.material);
+    if(f.design) L.push("Design   : "+f.design);
+    L.push("Shipping : "+(f.shipping||"SEA DDP")+" (include in price)");
+    if(f.due) L.push("Due      : "+f.due.toUpperCase());
+    if(f.notes) L.push("Notes    : "+f.notes);
+    return L.join("\n");
+  }
+  function render(){
+    var out = view==="email" ? buildEmail() : buildSpec();
+    var pre = el("output");
+    pre.textContent = out;
+    pre.className = view==="spec" ? "spec" : "";
+  }
+  function setView(v){
+    view=v;
+    document.querySelectorAll("#viewToggle button").forEach(function(b){
+      b.classList.toggle("active", b.dataset.view===v);
+    });
+    render();
+  }
+  function copyOut(){
+    copyText(el("output").textContent).then(function(){
+      var b=el("copyBtn"); b.textContent="✓ コピー済み"; b.classList.add("ok");
+      setTimeout(function(){ b.textContent="コピー"; b.classList.remove("ok"); },1600);
+    }).catch(function(){ alert("コピーできませんでした。手動で選択してコピーしてください。"); });
+  }
+
+  // ── translator ──
+  var tDir="jaen";   // jaen | enja
+  var tTone="formal"; // formal | casual
+  var tLoading=false;
+
+  function tLabels(){ return tDir==="jaen" ? ["日本語","English"] : ["English","日本語"]; }
+  function syncTUI(){
+    var L=tLabels();
+    el("tFrom").textContent=L[0];
+    el("tTo").textContent=L[1];
+    el("tIn").placeholder = tDir==="jaen"?"日本語を入力… (⌘/Ctrl+Enter)":"Type English… (⌘/Ctrl+Enter)";
+    el("tBtn").textContent = tLoading ? "翻訳中…" : (L[1]+" に翻訳");
+    el("tBtn").disabled = tLoading || !el("tIn").value.trim();
+  }
+  function setTone(t){
+    tTone=t;
+    document.querySelectorAll("#toneToggle button").forEach(function(b){
+      b.classList.toggle("active", b.dataset.tone===t);
+    });
+  }
+  function tSwap(){
+    var inV=el("tIn").value;
+    var outV=el("tOut").dataset.raw||"";
+    tDir = tDir==="jaen"?"enja":"jaen";
+    el("tIn").value=outV;
+    setTOut(inV);
+    syncTUI();
+  }
+  function setTOut(text){
+    var box=el("tOut");
+    box.dataset.raw=text||"";
+    box.innerHTML="";
+    if(text){
+      box.style.color="var(--ink)";
+      box.appendChild(document.createTextNode(text));
+      var cp=document.createElement("button");
+      cp.className="tCopy"; cp.textContent="コピー";
+      cp.onclick=function(){
+        copyText(text).then(function(){ cp.textContent="✓"; cp.classList.add("ok");
+          setTimeout(function(){ cp.textContent="コピー"; cp.classList.remove("ok"); },1400); });
+      };
+      box.appendChild(cp);
+    }else{
+      box.style.color="var(--sub)";
+      box.textContent="翻訳結果…";
+    }
+  }
+  function setTErr(msg){
+    var box=el("tOut");
+    box.dataset.raw="";
+    box.style.color="var(--seal)";
+    box.textContent=msg;
+  }
+
+  el("tIn").addEventListener("input", syncTUI);
+  el("tIn").addEventListener("keydown", function(e){
+    if((e.metaKey||e.ctrlKey) && e.key==="Enter"){ e.preventDefault(); translate(); }
+  });
+
+  async function translate(){
+    var text=el("tIn").value.trim();
+    if(!text || tLoading) return;
+    tLoading=true; syncTUI();
+    el("tOut").dataset.raw=""; el("tOut").style.color="var(--sub)"; el("tOut").textContent="翻訳中…";
+    var from = tDir==="jaen" ? "Japanese" : "English";
+    var to   = tDir==="jaen" ? "English"  : "Japanese";
+    try{
+      var res=await fetch("/api/translate",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text:text, from:from, to:to, tone:tTone})
+      });
+      var data=await res.json();
+      if(!res.ok){ setTErr(data.error||"翻訳に失敗しました。もう一度お試しください。"); }
+      else{ setTOut((data.text||"").trim() || "(no output)"); }
+    }catch(e){
+      setTErr("翻訳に失敗しました。通信環境を確認してもう一度お試しください。");
+    }finally{
+      tLoading=false; syncTUI();
+    }
+  }
+
+  // ── cm / inch converter ──
+  function roundN(n,d){ var f=Math.pow(10,d); return Math.round(n*f)/f; }
+  function fromCm(){
+    var v = parseFloat(el("cmIn").value);
+    if(isNaN(v)){ el("inIn").value=""; el("convHint").textContent=""; return; }
+    var inch = roundN(v/2.54, 2);
+    el("inIn").value = inch;
+    el("convHint").textContent = v+" cm = 約 "+inch+'" （'+roundN(v/2.54,1)+'" ish）';
+  }
+  function fromInch(){
+    var v = parseFloat(el("inIn").value);
+    if(isNaN(v)){ el("cmIn").value=""; el("convHint").textContent=""; return; }
+    var cm = roundN(v*2.54, 2);
+    el("cmIn").value = cm;
+    el("convHint").textContent = v+'" = 約 '+cm+" cm";
+  }
+  function clearConv(){ el("cmIn").value=""; el("inIn").value=""; el("convHint").textContent=""; }
+
+  renderQtyRows();
+  render();
+  syncTUI();
+</script>
+</body>
+</html>
