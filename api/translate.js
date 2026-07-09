@@ -4,7 +4,7 @@
 //
 // Env vars (set in Vercel → Project → Settings → Environment Variables):
 //   GEMINI_API_KEY  (required) — your Google AI Studio key
-//   GEMINI_MODEL    (optional) — defaults to "gemini-2.0-flash"
+//   GEMINI_MODEL    (optional) — defaults to "gemini-2.5-flash"
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -47,7 +47,7 @@ Rules:
 Text:
 ${text}`;
 
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const url =
     "https://generativelanguage.googleapis.com/v1beta/models/" +
     encodeURIComponent(model) +
